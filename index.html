@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hipismo Internacional Premium HD</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #0a0c10;
+            color: #ffffff;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: #121620;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1f2636;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00e676;
+        }
+        .badge-live {
+            background: #ff1744;
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .player-section {
+            background: #121620;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #1f2636;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .player-details {
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #161b27;
+        }
+        .channel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .channels-section {
+            background: #121620;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1f2636;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .channels-section h3 {
+            font-size: 0.95rem;
+            color: #8b9bb4;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .channel-btn {
+            background: #1c2232;
+            border: 1px solid #2a344a;
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .channel-btn:hover, .channel-btn.active {
+            background: #00e676;
+            color: #0a0c10;
+            border-color: #00e676;
+            font-weight: bold;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="brand">
+            🏇 <span>HIPISMO TV PREMIUM</span>
+        </div>
+        <div class="badge-live">EN VIVO HD</div>
+    </div>
+
+    <div class="main-container">
+        <!-- Reproductor Principal de Transmisiones Reales -->
+        <div class="player-section">
+            <div class="video-container">
+                <iframe id="live-frame" src="https://www.youtube.com/embed/live_stream?channel=UC80X4j8P0_3M3jRj6N5YJxg&autoplay=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="player-details">
+                <div class="channel-title" id="current-channel">Seleccionado: Gulfstream Park (EE.UU.)</div>
+                <span style="color: #00e676; font-size: 0.9rem;">● Señal Oficial En Vivo</span>
+            </div>
+        </div>
+
+        <!-- Panel con Canales Reales -->
+        <div class="channels-section">
+            <h3>Señales En Vivo</h3>
+            
+<button class="channel-btn active" onclick="changeChannel('gulfstream', 'Gulfstream Park (EE.UU.)')">
+    🇺🇸 Gulfstream Park
+</button>
+<button class="channel-btn" onclick="changeChannel('rinconada', 'La Rinconada (VEN)')">
+    🏇 La Rinconada (VEN)
+</button>
+<button class="channel-btn" onclick="changeChannel('monterrico', 'Monterrico (PER)')">
+    🇵🇪 Monterrico (PER)
+</button>
+<button class="channel-btn" onclick="changeChannel('tvg', 'TVG / Canal Hípico')">
+    📺 TVG / Canal Hípico
+</button>
+        </div>
+    </div>
+
+    <script>
+        var video = document.getElementById('video');
+        var hls = new Hls();
+        
+        // Cambia esto por la URL que te dé Render:
+        var BACKEND_URL = 'https://tu-backend-hipismo.onrender.com/api/stream/';
+
+        function fetchAndPlayStream(hipodromoId, name) {
+            document.getElementById('current-channel').innerText = 'Cargando señal en vivo de ' + name + '...';
+
+            fetch(BACKEND_URL + hipodromoId)
+                .then(response => response.json())
+                .then(data => {
+                    var streamToPlay = data.m3u8_url || data.fallback_url;
+                    
+                    if (data.status === 'success') {
+                        document.getElementById('current-channel').innerText = 'EN VIVO: ' + name;
+                    } else {
+                        document.getElementById('current-channel').innerText = name + ' (Señal de prueba - Fuera de horario)';
+                    }
+                    
+                    loadStream(streamToPlay);
+                })
+                .catch(err => {
+                    console.error('Error al conectar con backend:', err);
+                    document.getElementById('current-channel').innerText = 'Error al obtener señal de ' + name;
+                });
+        }
+
+        function loadStream(url) {
+            if (Hls.isSupported()) {
+                hls.destroy();
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.play();
+            }
+        }
+
+        function changeChannel(hipodromoId, name) {
+            fetchAndPlayStream(hipodromoId, name);
+            
+            var buttons = document.querySelectorAll('.channel-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        // Carga inicial automática
+        fetchAndPlayStream('gulfstream', 'Gulfstream Park');
+    </script>
+</body>
+</html>
